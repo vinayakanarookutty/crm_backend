@@ -6,13 +6,13 @@ import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class S3Service {
   private s3: S3;
-  private bucketName = "gokeralbucket";
+  private bucketName = 'gokeralbucket';
 
   constructor() {
     this.s3 = new S3({
-      region: "",
-      accessKeyId: "",
-      secretAccessKey: "",
+      region: '',
+      accessKeyId: '',
+      secretAccessKey: '',
     });
   }
 
@@ -24,7 +24,6 @@ export class S3Service {
       Key: key,
       Expires: 60, // 1 minute
       ContentType: fileType,
-      
     };
 
     const url = await this.s3.getSignedUrlPromise('putObject', params);

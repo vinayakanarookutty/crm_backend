@@ -1,43 +1,42 @@
-/* eslint-disable prettier/prettier */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'src/schemas/User.schema';
+import { User } from './user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  async createUser(userData: User): Promise<User> {
-    const newUser = new this.userModel(userData);
-    return newUser.save();
+  async create(dto: CreateUserDto) {
+    const hashed = await bcrypt.hash(dto.password, 10);
+    const user = new this.userModel({ ...dto, password: hashed });
+    return user.save();
   }
 
-  async findById(id: any): Promise<User | null> {
-    return await this.userModel.findById(id);
+  async findAll() {
+    return this.userModel.find().select('-password');
   }
 
-  async findUserByEmail(userEmail: string, type?: string): Promise<User> {
-    if (type) {
-      return await this.userModel
-        .findOne({ email: userEmail }, { password: 0 })
-        .exec();
-    }
-    return await this.userModel.findOne({ email: userEmail }).exec();
+  async findById(id: string) {
+    const user = await this.userModel.findById(id).select('-password');
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  async findUsers(): Promise<User[]> {
-    return await this.userModel.find().exec();
+  async update(id: string, dto: UpdateUserDto) {
+    return this.userModel
+      .findByIdAndUpdate(id, dto, { new: true })
+      .select('-password');
   }
 
-  async findByEmailAndUpdate(email: string, data: User) {
-  
-    return await this.userModel.findOneAndUpdate({ email }, data, {
-      new: true,
-    });
-  }
-
-  async findUserByName(userName: string): Promise<User> {
-    return await this.userModel.findOne({ name: userName });
+  async deactivate(id: string) {
+    return this.userModel.findByIdAndUpdate(
+      id,
+      { isActive: false },
+      { new: true },
+    );
   }
 }

@@ -1,26 +1,15 @@
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, userSchema } from 'src/schemas/User.schema';
-import { UserService } from './User.service';
-import { UserController } from './User.controller';
-import { AuthMiddleware } from 'src/middlleware/auth.middlllleware';
+import { User, UserSchema } from './user.schema';
+import { UserService } from './user.service';
+import { UserController } from './user.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      {
-        name: User.name,
-        schema: userSchema,
-      },
-    ]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  providers: [UserService],
   controllers: [UserController],
+  providers: [UserService],
+  exports: [UserService],
 })
-export class UserModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(AuthMiddleware)
-      .forRoutes('/userDetails', '/userProfile', '/updateDriverPersonalInfo'); // Protect userDetails route
-  }
-}
+export class UserModule {}
